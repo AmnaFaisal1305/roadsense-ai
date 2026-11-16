@@ -1,0 +1,8 @@
+path: road_damage_2class  # relative to the repo root; created by src/prepare_dataset.py
+train: images/train
+val: images/val
+test: images/test
+
+names:
+  0: pothole
+  1: manhole

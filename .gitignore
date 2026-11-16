@@ -1,0 +1,65 @@
+﻿
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.code-workspace
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# Machine-specific caches (regenerated automatically)
+.yolo/
+.matplotlib/
+
+
+# YOLO training runs and predictions
+runs/
+wandb/
+mlruns/
+
+# Model weights (large files)
+
+*.pth
+*.onnx
+*.engine
+
+# Dataset (avoid uploading large datasets)
+Dataset/
+datasets/
+road_damage_data/
+road_damage_2class/
+
+# Training outputs
+*.log
+*.csv
+*.cache
+
+# Operating system files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Local-only files
+app_backup_before_redesign.py
+*.print.html

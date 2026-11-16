@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Road Damage Detection & Spatial Inspection</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap">
+<style>
+:root{--bg:#E9E7E1;--bg2:#E0DED7;--surface:#F4F2EC;--border:#C9C6BC;--text:#1A1C1F;--muted:#5A5E64;--faint:#8C9096;
+--accent:#E7A900;--road:#2A2D32;--pothole:#BE3027;--manhole:#17688A;--ok:#2F7D4F;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#131518;--bg2:#0F1114;--surface:#1A1D21;--border:#2E3239;--text:#E8E6E0;--muted:#9A9EA5;--faint:#6C7078;--accent:#F2B705;--road:#0C0D10;--pothole:#F0554A;--manhole:#4BB3DA;--ok:#5CC183}}
+:root[data-theme="dark"]{--bg:#131518;--bg2:#0F1114;--surface:#1A1D21;--border:#2E3239;--text:#E8E6E0;--muted:#9A9EA5;--faint:#6C7078;--accent:#F2B705;--road:#0C0D10;--pothole:#F0554A;--manhole:#4BB3DA;--ok:#5CC183}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 Barlow,system-ui,sans-serif}
+h1,h2,.fig,.btn,.tabs{font-family:"Barlow Condensed",Barlow,sans-serif}
+.num{font-variant-numeric:tabular-nums}
+.app{display:grid;grid-template-columns:236px minmax(0,1fr);min-height:100vh}
+aside{background:var(--bg2);border-right:1px solid var(--border);padding:22px 18px}
+.brand{font:700 22px "Barlow Condensed";line-height:1}.brand small{display:block;font:400 13px Barlow;color:var(--muted);margin-top:4px}
+aside h3{font:600 13px Barlow;color:var(--muted);margin:24px 0 6px;padding-bottom:5px;border-bottom:1px solid var(--border)}
+.row{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);font-size:14px}
+.row span:last-child{color:var(--muted)}
+.rng{height:2px;background:var(--border);position:relative;margin:2px 0 9px}.rng i{position:absolute;left:0;top:0;bottom:0;background:var(--text)}
+.rng i::after{content:"";position:absolute;right:-4px;top:-5px;width:8px;height:12px;background:var(--accent);border:1px solid var(--text)}
+main{padding:26px 34px 40px;min-width:0}
+.top{display:flex;flex-wrap:wrap;gap:12px 40px;justify-content:space-between;align-items:flex-end}
+h1{font-size:clamp(34px,5vw,60px);line-height:.95;font-weight:700;margin:0;max-width:15ch}
+.lead{max-width:40ch;color:var(--muted);margin:0 0 4px}
+.status{font-size:13px;color:var(--muted);line-height:1.7;text-align:right}.status b{color:var(--text);font-weight:600}
+.dbl{margin:20px 0 22px;height:7px;border-top:2px solid var(--accent);border-bottom:2px solid var(--accent)}
+.plan{border:1px solid var(--border);background:var(--surface)}
+.plan-h{display:flex;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border);font-size:13px;color:var(--muted)}
+.plan-h b{color:var(--text);font:600 18px "Barlow Condensed"}
+.plan .sc{overflow-x:auto}.plan svg{display:block;min-width:760px;width:100%}
+.src{display:flex;flex-wrap:wrap;gap:6px 26px;align-items:center;padding:16px 0;color:var(--muted);font-size:14px}
+.src b{color:var(--text);font-weight:600}
+.btn{margin-left:auto;background:var(--accent);color:#111;font-weight:700;font-size:19px;padding:7px 24px;border-radius:2px}
+.kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));border-top:1px solid var(--text);border-bottom:1px solid var(--border)}
+.kpi{padding:14px 18px 14px 0}.kpi+.kpi{padding-left:18px;border-left:1px solid var(--border)}
+.kpi .l{font-size:13px;color:var(--muted)}.kpi .fig{font-size:52px;line-height:1.05;font-weight:600}.kpi .fig small{font-size:18px;color:var(--muted);margin-left:4px;font-weight:500}.kpi .s{font-size:12.5px;color:var(--faint)}
+.prog{height:3px;background:var(--border);margin:14px 0 8px}.prog i{display:block;height:100%;width:62%;background:var(--text)}
+.stat{font-size:13px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 24px}.stat b{color:var(--text)}
+.two{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:34px;margin-top:26px}
+h2{font-size:22px;font-weight:600;margin:0 0 2px}.cap{font-size:13px;color:var(--muted);margin:0 0 10px}
+.frame{background:var(--road);aspect-ratio:16/9}.frame svg,.chart svg{width:100%;height:100%;display:block}
+.tabs{display:flex;gap:26px;border-bottom:1px solid var(--border);margin-top:34px;overflow-x:auto;font-size:19px;font-weight:500}
+.tabs span{padding:8px 0;color:var(--muted);white-space:nowrap;border-bottom:3px solid transparent;margin-bottom:-1px}.tabs .on{color:var(--text);border-color:var(--accent);font-weight:600}
+.res{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:34px;margin-top:22px}
+table{width:100%;border-collapse:collapse;font-size:14px}th{text-align:left;font-weight:500;color:var(--muted);font-size:13px;padding:6px 8px 6px 0;border-bottom:1px solid var(--text)}
+td{padding:8px 8px 8px 0;border-bottom:1px solid var(--border)}td.r,th.r{text-align:right}
+.pr::before{content:"";display:inline-block;width:9px;height:9px;margin-right:7px;background:var(--c)}
+.mix{display:flex;height:14px;margin:6px 0 8px}.mix i{display:block}
+.key{display:flex;gap:18px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin:8px 0 0}.key i{display:inline-block;width:9px;height:9px;margin-right:6px;background:var(--c)}
+.note{font-size:13px;color:var(--muted);margin-top:12px;max-width:62ch}
+@media (max-width:1100px){.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.kpi{padding-left:0!important;border-left:0!important}.two,.res{grid-template-columns:1fr}}
+@media (max-width:860px){.app{grid-template-columns:1fr}aside{border-right:0;border-bottom:1px solid var(--border)}main{padding:20px 16px}.status{text-align:left}.btn{margin-left:0}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside>
+  <div class="brand">RoadSense AI<small>Road hazard inspection</small></div>
+  <h3>Model</h3>
+  <div class="row"><span>Weights</span><span>best.pt</span></div>
+  <div class="row"><span>Device</span><span>GPU 0</span></div>
+  <div class="row"><span>Classes</span><span>pothole, manhole, crack</span></div>
+  <h3>Detection</h3>
+  <div class="row"><span>Confidence</span><span class="num">0.15</span></div><div class="rng"><i style="width:14%"></i></div>
+  <div class="row"><span>Test-time augmentation</span><span>On</span></div>
+  <div class="row"><span>Blur people and vehicles</span><span>On</span></div>
+  <div class="row"><span>Tracking and performance</span><span>Open</span></div>
+  <div class="row"><span>Geo-reference</span><span>Open</span></div>
+  <h3>Video</h3>
+  <div class="row"><span>Source</span><span>Upload</span></div>
+  <div class="row"><span>Theme</span><span>Dark</span></div>
+</aside>
+
+<main>
+  <div class="top">
+    <h1>Road Damage Detection &amp; Spatial Inspection</h1>
+    <div>
+      <p class="lead">Dash-cam footage goes in. A ranked, mapped list of potholes and manholes comes out, each counted once.</p>
+      <div class="status"><b>Model ready</b> best.pt on GPU<br>TTA on, privacy blur on</div>
+    </div>
+  </div>
+  <div class="dbl"></div>
+
+  <section class="plan">
+    <div class="plan-h"><b>Strip plan of the surveyed road</b><span class="num">Chainage 0 to 190 m, driving left to right</span></div>
+    <div class="sc"><svg viewBox="0 0 1220 210" role="img" aria-label="Strip plan: hazards plotted along the surveyed road by chainage">
+      <g stroke="var(--faint)" stroke-width="1"><path d="M40 34H1180"/>
+        <path d="M40 28v12M160 28v12M280 28v12M400 28v12M520 28v12M640 28v12M760 28v12M880 28v12M1000 28v12M1120 28v12"/>
+        <path d="M100 31v6M220 31v6M340 31v6M460 31v6M580 31v6M700 31v6M820 31v6M940 31v6M1060 31v6M1180 28v12"/></g>
+      <g font-family="Barlow" font-size="13" fill="var(--muted)" text-anchor="middle"><text x="40" y="20">0</text><text x="280" y="20">40</text><text x="520" y="20">80</text><text x="760" y="20">120</text><text x="1000" y="20">160</text><text x="1180" y="20">190 m</text></g>
+      <rect x="40" y="80" width="1140" height="64" fill="var(--road)"/>
+      <path d="M40 83H1180M40 141H1180" stroke="#F4F2EC" stroke-width="1.5" opacity=".75"/>
+      <path d="M40 112H1180" stroke="var(--accent)" stroke-width="2.5" stroke-dasharray="26 22"/>
+      <g fill="var(--pothole)" stroke="#F4F2EC" stroke-width="1.2"><ellipse cx="106" cy="126" rx="9" ry="6"/><ellipse cx="190" cy="96" rx="7" ry="5"/><ellipse cx="236" cy="124" rx="12" ry="7"/><ellipse cx="322" cy="98" rx="8" ry="5"/><ellipse cx="388" cy="128" rx="10" ry="6"/><ellipse cx="470" cy="100" rx="7" ry="5"/><ellipse cx="526" cy="122" rx="13" ry="7"/><ellipse cx="610" cy="96" rx="8" ry="5"/><ellipse cx="664" cy="126" rx="9" ry="6"/><ellipse cx="716" cy="102" rx="11" ry="6"/></g>
+      <g fill="none" stroke="var(--manhole)" stroke-width="3"><circle cx="292" cy="124" r="9" fill="var(--road)"/><circle cx="574" cy="98" r="9" fill="var(--road)"/></g>
+      <g stroke="var(--text)" stroke-width="1"><path d="M236 117V160M292 133V160M526 115V160"/></g>
+      <g font-family="Barlow" font-size="13" fill="var(--text)" text-anchor="middle"><text x="236" y="176">Pothole 14, high</text><text x="292" y="196" fill="var(--manhole)">Manhole 3</text><text x="526" y="176">Pothole 27, low</text></g>
+      <rect x="754" y="76" width="426" height="72" fill="var(--bg)" opacity=".6"/>
+      <path d="M754 48V152" stroke="var(--text)" stroke-width="2.5"/><path d="M746 48h16l-8 10z" fill="var(--text)"/>
+      <text x="768" y="62" font-family="Barlow" font-size="13" font-weight="600" fill="var(--text)">Frame 301 of 455, 118 m</text>
+    </svg></div>
+  </section>
+
+  <div class="src"><span><b>road_survey_05.mp4</b></span><span class="num">898×506</span><span class="num">30 fps</span><span class="num">455 frames</span><span class="num">15.2 s</span><span class="num">0.19 km at 45 km/h</span><span class="btn">Run inspection</span></div>
+
+  <section class="kpis">
+    <div class="kpi"><div class="l">Unique potholes</div><div class="fig num" style="color:var(--pothole)">55</div><div class="s">In frame now: 2</div></div>
+    <div class="kpi"><div class="l">Unique manholes</div><div class="fig num" style="color:var(--manhole)">3</div><div class="s">In frame now: 1</div></div>
+    <div class="kpi"><div class="l">Total hazards</div><div class="fig num">58</div><div class="s">Kalman de-duplicated</div></div>
+    <div class="kpi"><div class="l">Hazard density</div><div class="fig num">305.9<small>per km</small></div><div class="s">per km of surveyed road</div></div>
+    <div class="kpi"><div class="l">Processing speed</div><div class="fig num">4.5<small>fps</small></div><div class="s">average over the run</div></div>
+  </section>
+  <div class="prog"><i></i></div>
+  <div class="stat num"><span><b>Processing</b> 62%</span><span>Frame 301/455</span><span>Hazards 58</span><span>Elapsed 66 s</span><span>ETA 37 s</span></div>
+
+  <section class="two">
+    <div><h2>Live inspection feed</h2><p class="cap">People and vehicles are blurred before anything is saved.</p>
+      <div class="frame"><svg viewBox="0 0 480 270" preserveAspectRatio="xMidYMid slice"><rect width="480" height="270" fill="#2a2f36"/><rect y="118" width="480" height="152" fill="#1b1f25"/><polygon points="212,118 268,118 470,270 10,270" fill="#2f343b"/><path d="M240 118V270" stroke="#E7A900" stroke-width="3" stroke-dasharray="16 14"/><ellipse cx="156" cy="226" rx="30" ry="9" fill="#0d0f12"/><rect x="118" y="204" width="76" height="44" fill="none" stroke="#F0554A" stroke-width="2"/><rect x="118" y="190" width="104" height="14" fill="#F0554A"/><text x="123" y="201" font-family="Barlow" font-size="11" font-weight="600" fill="#fff">pothole 14  0.83</text><ellipse cx="330" cy="170" rx="16" ry="5" fill="#0d0f12"/><rect x="310" y="158" width="42" height="24" fill="none" stroke="#4BB3DA" stroke-width="2"/><rect x="310" y="145" width="84" height="13" fill="#4BB3DA"/><text x="315" y="155" font-family="Barlow" font-size="11" font-weight="600" fill="#06202e">manhole 3  0.91</text></svg></div></div>
+    <div class="chart"><h2>Cumulative detections</h2><p class="cap">Hazards counted so far, by video time.</p>
+      <div style="aspect-ratio:16/9"><svg viewBox="0 0 440 247" role="img" aria-label="Cumulative detections over video time">
+        <g stroke="var(--border)"><path d="M30 20H430M30 70H430M30 120H430M30 170H430M30 220H430"/></g>
+        <path d="M30 220C90 214 110 180 160 150S250 92 310 66 390 36 420 30" fill="none" stroke="var(--pothole)" stroke-width="3"/>
+        <path d="M30 220H150L165 204H265L280 190H420" fill="none" stroke="var(--manhole)" stroke-width="3"/>
+        <g font-family="Barlow" font-size="12" fill="var(--muted)"><text x="2" y="224">0</text><text x="2" y="24">60</text><text x="30" y="240">0 s</text><text x="396" y="240">15 s</text></g>
+        <g font-family="Barlow" font-size="13" font-weight="600"><text x="330" y="22" fill="var(--pothole)">Potholes 55</text><text x="330" y="184" fill="var(--manhole)">Manholes 3</text></g></svg></div></div>
+  </section>
+
+  <div class="tabs"><span>Video</span><span class="on">Map</span><span>Analytics</span><span>Registry and export</span><span>Evidence</span></div>
+  <section class="res">
+    <div><h2>Hazard map</h2><p class="cap">Route heading 45 degrees from the start point.</p>
+      <svg viewBox="0 0 520 290" style="width:100%;display:block;background:var(--surface);border:1px solid var(--border)" role="img" aria-label="Hazards along the surveyed route">
+        <g stroke="var(--border)"><path d="M0 72H520M0 145H520M0 218H520M104 0V290M208 0V290M312 0V290M416 0V290"/></g>
+        <path d="M40 252C140 232 170 168 260 148S410 90 490 40" fill="none" stroke="var(--text)" stroke-width="3"/>
+        <g fill="var(--pothole)"><circle cx="84" cy="244" r="6"/><circle cx="130" cy="232" r="9"/><circle cx="206" cy="172" r="7"/><circle cx="262" cy="148" r="10"/><circle cx="352" cy="112" r="5"/><circle cx="430" cy="72" r="7"/></g>
+        <g fill="var(--manhole)"><circle cx="172" cy="202" r="6"/><circle cx="392" cy="96" r="6"/></g></svg>
+      <div class="key"><span><i style="--c:var(--pothole)"></i>Pothole 55</span><span><i style="--c:var(--manhole)"></i>Manhole 3</span><span><i style="--c:var(--text)"></i>Survey route</span></div>
+      <p class="note">Positions are estimated by dead reckoning from the start point, bearing and average speed. They are not measured by GPS.</p></div>
+    <div><h2>Repair priority</h2><p class="cap">24 high, 20 medium, 14 low.</p>
+      <div class="mix"><i style="width:41%;background:var(--pothole)"></i><i style="width:35%;background:var(--accent)"></i><i style="width:24%;background:var(--ok)"></i></div>
+      <table><tr><th>ID</th><th>Type</th><th>Priority</th><th class="r">Chainage</th><th class="r">Conf.</th></tr>
+        <tr><td class="num">14</td><td>Pothole</td><td class="pr" style="--c:var(--pothole)">High</td><td class="r num">0.06 km</td><td class="r num">83%</td></tr>
+        <tr><td class="num">3</td><td>Manhole</td><td class="pr" style="--c:var(--accent)">Medium</td><td class="r num">0.09 km</td><td class="r num">91%</td></tr>
+        <tr><td class="num">27</td><td>Pothole</td><td class="pr" style="--c:var(--ok)">Low</td><td class="r num">0.14 km</td><td class="r num">46%</td></tr></table></div>
+  </section>
+</main>
+</div>
+</body>
+</html>
